@@ -18,6 +18,7 @@ const game = (() => {
         gameBoard: gameBoard,
         setPiece: setPiece,
         display: display,
+        threeInARow: threeInARow
     } = (function() {
             const boardDimension = 3;
             const emptySpace = "_"
@@ -42,8 +43,32 @@ const game = (() => {
             }
         
             const isSpaceTaken = (i, j) => {
-                return boardState[i][j] != emptySpace;
+                return boardState[i][j] !== emptySpace;
             };
+
+            const threeInARow = (symbol) => {
+                for(let i = 0; i < boardDimension; i++){
+                    if(boardState[i].every(column => column === symbol)){
+                        return true;
+                    }
+                    if(boardState.map(row => row[i]).every(e => e === symbol)){
+                        return true;
+                    }
+                } 
+                if(range(0, boardDimension).every(i => boardState[i][i] === symbol)){
+                    return true;
+                }
+                if(range(0, boardDimension).every(i => boardState[i][boardDimension - 1 - i] === symbol)){
+                    return true;
+                }               
+                return false;
+            };
+
+            function* range(start, end, step = 1) {
+                for(let i = start; i < end; i += step){
+                    yield i;
+                }
+            }
 
             const displayBoard = () => {
                 for(let i = 0; i < boardDimension; i++){
@@ -60,16 +85,21 @@ const game = (() => {
             return {
                 gameBoard: boardState,
                 setPiece: setPiece,
-                display: displayBoard
+                display: displayBoard,
+                threeInARow, threeInARow
             }
 
         })();
 
     const makeMove = (i, j) => {
         if(setPiece(i, j, currentPlayer.playerSymbol)){
+            if(threeInARow(currentPlayer.playerSymbol)){
+                console.log("Winner!");
+            }
             currentPlayer = currentPlayer === player1 ? player2 : player1;
         }
         display();
+
     };
 
     return {
