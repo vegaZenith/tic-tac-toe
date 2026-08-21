@@ -14,15 +14,27 @@ const game = (() => {
     const player2 = makePlayer("O");
     let currentPlayer = player1;
 
+    document.querySelectorAll(".space").forEach((space, index) => {
+        space.addEventListener("click", function(e){
+            let i = Math.floor(index / 3);
+            let j = index % 3;
+            let sym = currentPlayer.playerSymbol;
+            if(makeMove(i, j)){
+                e.target.textContent = sym;
+            }
+        });
+    });
+
     const {
         gameBoard: gameBoard,
         setPiece: setPiece,
         display: display,
-        threeInARow: threeInARow
+        threeInARow: threeInARow,
+        isBoardFull: isBoardFull
     } = (function() {
             const boardDimension = 3;
-            const emptySpace = "_"
-            let boardState = []
+            const emptySpace = "_";
+            let boardState = [];
             const initBoard = () => {
                 let gameBoard = [];
                 for(let i = 0; i < boardDimension; i++){
@@ -34,13 +46,21 @@ const game = (() => {
                 return gameBoard;
             }
 
+            boardState = initBoard();
+
             const setPiece = (i, j, playerSymbol) => {
                 if(!isSpaceTaken(i, j)){
                     boardState[i][j] = playerSymbol;
                     return true;
                 }
-                return false;
+                return false; // space taken
             }
+
+            const isBoardFull = () => {
+                return boardState.every(row => {
+                    return row.every(column => column !== emptySpace);
+                })
+            };
         
             const isSpaceTaken = (i, j) => {
                 return boardState[i][j] !== emptySpace;
@@ -80,26 +100,48 @@ const game = (() => {
                 }
             };
 
+            const renderBoard = function(){
+                let i = 0, j = 0;
+                document.querySelectorAll(".space").forEach(space => {
+                    space.textContent = boardState[i][j];
+                    if(space.textContent === "_"){
+                        space.textContent = " ";
+                    }
+                    if(j === 2){
+                        i++;
+                        j = 0;
+                    } else {
+                        j++;
+                    }
+                });
+            };
 
-            boardState = initBoard();
+
+            
             return {
                 gameBoard: boardState,
                 setPiece: setPiece,
-                display: displayBoard,
-                threeInARow, threeInARow
+                display: renderBoard,
+                threeInARow, threeInARow,
+                isBoardFull, isBoardFull
             }
 
         })();
 
     const makeMove = (i, j) => {
-        if(setPiece(i, j, currentPlayer.playerSymbol)){
+        document.querySelector(".message").innerHTML = "";
+        if(setPiece(i, j, currentPlayer.playerSymbol)){ // if the space is not taken
             if(threeInARow(currentPlayer.playerSymbol)){
-                console.log("Winner!");
+                document.querySelector(".message").innerHTML = "Winner!";
+            } else if(isBoardFull()){
+                document.querySelector(".message").innerHTML = "Tie!";
             }
             currentPlayer = currentPlayer === player1 ? player2 : player1;
+            return true;
+        } else {
+            document.querySelector(".message").innerHTML = "Space already taken! Try again.";
+            return false;
         }
-        display();
-
     };
 
     return {
