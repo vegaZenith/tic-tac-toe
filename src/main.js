@@ -1,29 +1,22 @@
 const game = (() => {
-    const makePlayer = (symbol) => {
+    let gameActive;
+    const makePlayer = (name, symbol) => {
         const playerSymbol = symbol;
+        const playerName = name;
 
         const getPlayerSymbol = () => {
             return playerSymbol;
         }
 
         return {
-            playerSymbol: playerSymbol
+            playerSymbol: playerSymbol,
+            name: playerName
         }
     };
-    const player1 = makePlayer("X");
-    const player2 = makePlayer("O");
-    let currentPlayer = player1;
 
-    document.querySelectorAll(".space").forEach((space, index) => {
-        space.addEventListener("click", function(e){
-            let i = Math.floor(index / 3);
-            let j = index % 3;
-            let sym = currentPlayer.playerSymbol;
-            if(makeMove(i, j)){
-                e.target.textContent = sym;
-            }
-        });
-    });
+    let player1;
+    let player2;
+    let currentPlayer;
 
     const {
         gameBoard: gameBoard,
@@ -128,13 +121,38 @@ const game = (() => {
 
         })();
 
+        const startGame = (p1, p2) => {
+            gameActive = true;
+            player1 = makePlayer(p1, "X");
+            player2 = makePlayer(p2, "O");
+            currentPlayer = player1;
+
+            document.querySelectorAll(".space").forEach((space, index) => {
+                space.innerText = "";
+                space.addEventListener("click", function(e){
+                    let i = Math.floor(index / 3);
+                    let j = index % 3;
+                    
+                    let sym = currentPlayer.playerSymbol;
+                    if(makeMove(i, j)){
+                        e.target.textContent = sym;
+                    }
+                });
+            });
+        };
+
     const makeMove = (i, j) => {
+        if(!gameActive){
+            return;
+        }
         document.querySelector(".message").innerHTML = "";
         if(setPiece(i, j, currentPlayer.playerSymbol)){ // if the space is not taken
             if(threeInARow(currentPlayer.playerSymbol)){
-                document.querySelector(".message").innerHTML = "Winner!";
+                document.querySelector(".message").innerHTML = currentPlayer.name + " Wins!";
+                gameActive = false;
             } else if(isBoardFull()){
                 document.querySelector(".message").innerHTML = "Tie!";
+                gameActive = false;
             }
             currentPlayer = currentPlayer === player1 ? player2 : player1;
             return true;
@@ -145,9 +163,16 @@ const game = (() => {
     };
 
     return {
-        makeMove : makeMove
+        makeMove : makeMove,
+        startGame : startGame
     }
 
 })();
+
+document.querySelector(".start").addEventListener("click", (e) =>{
+    const player1 = document.querySelector("#player-1").value;
+    const player2 = document.querySelector("#player-2").value;
+    game.startGame(player1, player2);
+});
 
 
