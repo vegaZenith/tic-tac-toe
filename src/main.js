@@ -17,18 +17,16 @@ const game = (() => {
     let player1;
     let player2;
     let currentPlayer;
+    let eventListenersAdded = false;
 
-    const {
-        gameBoard: gameBoard,
-        setPiece: setPiece,
-        display: display,
-        threeInARow: threeInARow,
-        isBoardFull: isBoardFull
-    } = (function() {
+    let board;
+
+    const makeBoard = function() {
             const boardDimension = 3;
             const emptySpace = "_";
             let boardState = [];
             const initBoard = () => {
+
                 let gameBoard = [];
                 for(let i = 0; i < boardDimension; i++){
                     gameBoard.push([]);
@@ -40,7 +38,6 @@ const game = (() => {
             }
 
             boardState = initBoard();
-
             const setPiece = (i, j, playerSymbol) => {
                 if(!isSpaceTaken(i, j)){
                     boardState[i][j] = playerSymbol;
@@ -119,16 +116,14 @@ const game = (() => {
                 isBoardFull, isBoardFull
             }
 
-        })();
+        };
 
-        const startGame = (p1, p2) => {
-            gameActive = true;
-            player1 = makePlayer(p1, "X");
-            player2 = makePlayer(p2, "O");
-            currentPlayer = player1;
-
+        const addEventListeners = () => {
+            if(eventListenersAdded){
+                return;
+            }
+            eventListenersAdded = true;
             document.querySelectorAll(".space").forEach((space, index) => {
-                space.innerText = "";
                 space.addEventListener("click", function(e){
                     let i = Math.floor(index / 3);
                     let j = index % 3;
@@ -141,16 +136,27 @@ const game = (() => {
             });
         };
 
+        const startGame = (p1, p2) => {
+            gameActive = true;
+            player1 = makePlayer(p1, "X");
+            player2 = makePlayer(p2, "O");
+            currentPlayer = player1;
+            board = makeBoard();
+            board.display();
+            addEventListeners();
+            document.querySelector(".message").innerHTML = "";
+        };
+
     const makeMove = (i, j) => {
         if(!gameActive){
             return;
         }
         document.querySelector(".message").innerHTML = "";
-        if(setPiece(i, j, currentPlayer.playerSymbol)){ // if the space is not taken
-            if(threeInARow(currentPlayer.playerSymbol)){
+        if(board.setPiece(i, j, currentPlayer.playerSymbol)){ // if the space is not taken
+            if(board.threeInARow(currentPlayer.playerSymbol)){
                 document.querySelector(".message").innerHTML = currentPlayer.name + " Wins!";
                 gameActive = false;
-            } else if(isBoardFull()){
+            } else if(board.isBoardFull()){
                 document.querySelector(".message").innerHTML = "Tie!";
                 gameActive = false;
             }
